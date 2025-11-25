@@ -1,10 +1,9 @@
-xml
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WB Card Checker</title>
+    <title>WB Card Analyzer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,24 +22,17 @@ xml
             color: #333;
             text-align: center;
         }
-        .form-group {
-            margin-bottom: 15px;
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
+        input {
+            flex: 1;
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
-        }
-        textarea {
-            min-height: 80px;
         }
         button {
             background: #667eea;
@@ -50,11 +42,15 @@ xml
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
-            width: 100%;
-            margin-top: 20px;
         }
         button:hover {
             background: #5568d3;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin: 20px 0;
         }
         .result {
             margin-top: 30px;
@@ -72,161 +68,218 @@ xml
             border-radius: 8px;
             margin: 20px 0;
         }
-        .category-item {
+        .recommendation {
             background: #f9f9f9;
             padding: 15px;
             margin: 10px 0;
             border-left: 4px solid #667eea;
             border-radius: 4px;
         }
-        .score {
-            font-weight: bold;
-            color: #667eea;
+        .recommendation.critical {
+            border-left-color: #e74c3c;
+        }
+        .recommendation.warning {
+            border-left-color: #f39c12;
+        }
+        .recommendation.ok {
+            border-left-color: #27ae60;
+        }
+        .error {
+            background: #ffe6e6;
+            color: #c33;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔍 Оценка карточки Wildberries</h1>
+        <h1>🔍 WB Card Analyzer</h1>
+        <p style="text-align: center; color: #666;">Вставьте ссылку на карточку Wildberries и получите анализ с рекомендациями</p>
         
-        <form id="form">
-            <div class="form-group">
-                <label>Название товара:</label>
-                <input type="text" id="name" placeholder="Введите название" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Количество фото:</label>
-                <input type="number" id="photos" min="0" placeholder="7" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Инфографика?</label>
-                <select id="infographics" required>
-                    <option value="">-- Выберите --</option>
-                    <option value="1">Да</option>
-                    <option value="0">Нет</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Видео?</label>
-                <select id="video" required>
-                    <option value="">-- Выберите --</option>
-                    <option value="1">Да</option>
-                    <option value="0">Нет</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Описание товара:</label>
-                <textarea id="description" placeholder="Вставьте описание" required></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Характеристики заполнены?</label>
-                <select id="characteristics" required>
-                    <option value="">-- Выберите --</option>
-                    <option value="10">Полностью</option>
-                    <option value="5">Частично</option>
-                    <option value="0">Нет</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Количество отзывов:</label>
-                <input type="number" id="reviews" min="0" placeholder="10" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Рейтинг (0-5):</label>
-                <input type="number" id="rating" min="0" max="5" step="0.1" placeholder="4.5" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Отзывы с фото?</label>
-                <select id="reviewsPhoto" required>
-                    <option value="">-- Выберите --</option>
-                    <option value="1">Да</option>
-                    <option value="0">Нет</option>
-                </select>
-            </div>
-            
-            <button type="submit">📊 Оценить карточку</button>
-        </form>
+        <div class="url-input-group">
+            <input type="text" id="urlInput" placeholder="https://www.wildberries.ru/catalog/..." required>
+            <button onclick="analyzeCard()">Анализировать</button>
+        </div>
+        
+        <div class="loading" id="loading">⏳ Анализирую карточку...</div>
+        <div class="error" id="error" style="display: none;"></div>
         
         <div class="result" id="result">
-            <h2>Результаты:</h2>
             <div class="rating-box" id="ratingBox"></div>
-            <div id="details"></div>
+            <div id="recommendations"></div>
         </div>
     </div>
 
     <script>
-        document.getElementById('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            evaluate();
-        });
+        const BACKEND_URL = 'https://wb-parser-backend.onrender.com'; // Замените на вашу ссылку!
 
-        function evaluate() {
-            let score = 0;
+        function analyzeCard() {
+            const url = document.getElementById('urlInput').value.trim();
             
-            // Название (макс 10)
-            const name = document.getElementById('name').value;
-            score += name.length > 50 ? 8 : 4;
-            
-            // Фото (макс 10)
-            const photos = parseInt(document.getElementById('photos').value) || 0;
-            score += photos >= 7 ? 10 : photos >= 5 ? 6 : 2;
-            
-            // Инфографика (макс 5)
-            score += parseInt(document.getElementById('infographics').value || 0) * 5;
-            
-            // Видео (макс 5)
-            score += parseInt(document.getElementById('video').value || 0) * 5;
-            
-            // Описание (макс 10)
-            const desc = document.getElementById('description').value;
-            score += desc.length > 300 ? 10 : desc.length > 100 ? 5 : 2;
-            
-            // Характеристики (макс 10)
-            score += parseInt(document.getElementById('characteristics').value || 0);
-            
-            // Отзывы (макс 10)
-            const reviews = parseInt(document.getElementById('reviews').value) || 0;
-            score += reviews >= 10 ? 8 : reviews >= 5 ? 5 : 2;
-            
-            // Рейтинг (макс 10)
-            const rating = parseFloat(document.getElementById('rating').value) || 0;
-            score += rating >= 4.3 ? 10 : rating >= 4 ? 7 : 3;
-            
-            // Отзывы с фото (макс 5)
-            score += parseInt(document.getElementById('reviewsPhoto').value || 0) * 5;
-            
-            // Норм по 100
-            const normalized = Math.min(100, (score / 75) * 100);
-            
-            let grade = 'A';
-            if (normalized < 75) grade = 'B';
-            if (normalized < 60) grade = 'C';
-            if (normalized < 40) grade = 'D';
-            
-            document.getElementById('ratingBox').textContent = grade + ' (' + normalized.toFixed(0) + '/100)';
-            
-            let html = '<h3>Рекомендации:</h3>';
-            if (photos < 7) html += '<div class="category-item">❌ Фото: добавьте минимум 7 фото</div>';
-            if (name.length < 50) html += '<div class="category-item">❌ Название: добавьте ключевые слова</div>';
-            if (desc.length < 300) html += '<div class="category-item">❌ Описание: расширьте до 300+ символов</div>';
-            if (rating < 4.3) html += '<div class="category-item">⚠️ Рейтинг: нужен минимум 4.3</div>';
-            if (reviews < 10) html += '<div class="category-item">⚠️ Отзывы: соберите минимум 10 отзывов</div>';
-            
-            if (photos >= 7 && name.length >= 50 && desc.length >= 300 && rating >= 4.3 && reviews >= 10) {
-                html += '<div class="category-item">✅ Карточка хорошо оформлена!</div>';
+            if (!url) {
+                showError('Введите ссылку');
+                return;
             }
             
-            document.getElementById('details').innerHTML = html;
+            if (!url.includes('wildberries.ru')) {
+                showError('Это не ссылка на Wildberries');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('result').classList.remove('show');
+
+            fetch(`${BACKEND_URL}/parse?url=${encodeURIComponent(url)}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    if (data.error) {
+                        showError(data.error);
+                        return;
+                    }
+                    
+                    displayAnalysis(data.data);
+                })
+                .catch(err => {
+                    document.getElementById('loading').style.display = 'none';
+                    showError('Ошибка подключения: ' + err.message);
+                });
+        }
+
+        function displayAnalysis(data) {
+            let score = 0;
+            const recommendations = [];
+
+            // Название
+            if (data.title && data.title.length > 50) {
+                score += 10;
+            } else {
+                score += 5;
+                recommendations.push({
+                    level: 'warning',
+                    text: '⚠️ Название: ' + (data.title ? 'может быть длиннее' : 'не найдено')
+                });
+            }
+
+            // Фото
+            if (data.photos >= 7) {
+                score += 15;
+            } else if (data.photos >= 5) {
+                score += 10;
+                recommendations.push({
+                    level: 'warning',
+                    text: '⚠️ Фото: есть ' + data.photos + ', нужно минимум 7'
+                });
+            } else {
+                score += 5;
+                recommendations.push({
+                    level: 'critical',
+                    text: '❌ Фото: только ' + data.photos + ', добавьте до 7-10'
+                });
+            }
+
+            // Описание
+            if (data.description && data.description.length > 300) {
+                score += 15;
+            } else if (data.description && data.description.length > 100) {
+                score += 8;
+                recommendations.push({
+                    level: 'warning',
+                    text: '⚠️ Описание: расширьте до 300+ символов'
+                });
+            } else {
+                score += 3;
+                recommendations.push({
+                    level: 'critical',
+                    text: '❌ Описание: слишком короткое или пустое'
+                });
+            }
+
+            // Характеристики
+            if (data.characteristics >= 10) {
+                score += 15;
+            } else if (data.characteristics >= 5) {
+                score += 8;
+                recommendations.push({
+                    level: 'warning',
+                    text: '⚠️ Характеристики: заполнено ' + data.characteristics + ', нужно больше'
+                });
+            } else {
+                recommendations.push({
+                    level: 'critical',
+                    text: '❌ Характеристики: заполнено только ' + data.characteristics
+                });
+            }
+
+            // Рейтинг и отзывы
+            const rating = parseFloat(data.rating) || 0;
+            if (rating >= 4.3) {
+                score += 15;
+            } else if (rating >= 4.0) {
+                score += 10;
+                recommendations.push({
+                    level: 'warning',
+                    text: '⚠️ Рейтинг: ' + rating + ', нужен минимум 4.3'
+                });
+            } else {
+                recommendations.push({
+                    level: 'critical',
+                    text: '❌ Рейтинг: ' + rating + ', критически низкий'
+                });
+            }
+
+            const reviews = parseInt(data.reviewCount) || 0;
+            if (reviews >= 10) {
+                score += 15;
+            } else if (reviews >= 5) {
+                score += 8;
+                recommendations.push({
+                    level: 'warning',
+                    text: '⚠️ Отзывы: всего ' + reviews + ', нужно минимум 10'
+                });
+            } else {
+                recommendations.push({
+                    level: 'critical',
+                    text: '❌ Отзывы: всего ' + reviews + ', срочно соберите отзывы'
+                });
+            }
+
+            // Определяем оценку
+            let grade = 'A';
+            if (score < 75) grade = 'B';
+            if (score < 60) grade = 'C';
+            if (score < 40) grade = 'D';
+
+            document.getElementById('ratingBox').textContent = grade + ' (' + score + '/100)';
+
+            let html = '<h3>📋 Рекомендации по улучшению:</h3>';
+            
+            if (recommendations.length === 0) {
+                html += '<div class="recommendation ok">✅ Карточка отлично оформлена! Готова к рекламе.</div>';
+            } else {
+                recommendations.forEach(rec => {
+                    html += `<div class="recommendation ${rec.level}">${rec.text}</div>`;
+                });
+            }
+
+            document.getElementById('recommendations').innerHTML = html;
             document.getElementById('result').classList.add('show');
         }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Нажатие Enter в поле ввода
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') analyzeCard();
+        });
     </script>
 </body>
 </html>
