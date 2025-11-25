@@ -1,151 +1,232 @@
+xml
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Оценка карточки Wildberries</title>
+    <title>WB Card Checker</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
+            font-family: Arial, sans-serif;
             max-width: 900px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 40px;
+            padding: 20px;
+            background: #f5f5f5;
         }
-        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
         h1 {
             color: #333;
-            margin-bottom: 10px;
             text-align: center;
         }
-        
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-        
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
+            font-weight: bold;
             color: #333;
-            font-weight: 500;
         }
-        
-        input, textarea, select {
+        input, select, textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 6px;
+            border-radius: 4px;
             font-size: 14px;
-            font-family: inherit;
         }
-        
         textarea {
-            resize: vertical;
             min-height: 80px;
         }
-        
         button {
             background: #667eea;
             color: white;
             padding: 12px 30px;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
             width: 100%;
             margin-top: 20px;
-            transition: background 0.3s;
         }
-        
         button:hover {
-            background: #764ba2;
+            background: #5568d3;
         }
-        
         .result {
             margin-top: 30px;
             display: none;
         }
-        
         .result.show {
             display: block;
         }
-        
-        .rating {
-            font-size: 48px;
+        .rating-box {
+            font-size: 36px;
             font-weight: bold;
             text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
             margin: 20px 0;
-            color: #667eea;
         }
-        
-        .category {
-            background: #f8f9fa;
+        .category-item {
+            background: #f9f9f9;
             padding: 15px;
-            border-radius: 6px;
             margin: 10px 0;
             border-left: 4px solid #667eea;
+            border-radius: 4px;
         }
-        
-        .category-title {
+        .score {
             font-weight: bold;
-            color: #333;
-        }
-        
-        .category-score {
             color: #667eea;
-            font-weight: bold;
-        }
-        
-        .status-ok {
-            color: green;
-        }
-        
-        .status-warning {
-            color: orange;
-        }
-        
-        .status-critical {
-            color: red;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔍 Оценка карточки Wildberries</h1>
-        <p class="subtitle">Введите данные вашей карточки, и система выставит оценку</p>
         
-        <form id="cardForm">
+        <form id="form">
             <div class="form-group">
-                <label for="productUrl">Ссылка на товар (WB):</label>
-                <input type="text" id="productUrl" placeholder="https://www.wildberries.ru/catalog/..." required>
+                <label>Название товара:</label>
+                <input type="text" id="name" placeholder="Введите название" required>
             </div>
             
             <div class="form-group">
-                <label for="productName">Название товара:</label>
-                <input type="text" id="productName" placeholder="Например: АураШарма Кресло-пуф-кровать 200x67" required>
+                <label>Количество фото:</label>
+                <input type="number" id="photos" min="0" placeholder="7" required>
             </div>
             
             <div class="form-group">
-                <label for="photoCount">Количество фото:</label>
-                <input type="number" id="photoCount" min="0" placeholder="7" required>
+                <label>Инфографика?</label>
+                <select id="infographics" required>
+                    <option value="">-- Выберите --</option>
+                    <option value="1">Да</option>
+                    <option value="0">Нет</option>
+                </select>
             </div>
+            
+            <div class="form-group">
+                <label>Видео?</label>
+                <select id="video" required>
+                    <option value="">-- Выберите --</option>
+                    <option value="1">Да</option>
+                    <option value="0">Нет</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Описание товара:</label>
+                <textarea id="description" placeholder="Вставьте описание" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Характеристики заполнены?</label>
+                <select id="characteristics" required>
+                    <option value="">-- Выберите --</option>
+                    <option value="10">Полностью</option>
+                    <option value="5">Частично</option>
+                    <option value="0">Нет</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Количество отзывов:</label>
+                <input type="number" id="reviews" min="0" placeholder="10" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Рейтинг (0-5):</label>
+                <input type="number" id="rating" min="0" max="5" step="0.1" placeholder="4.5" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Отзывы с фото?</label>
+                <select id="reviewsPhoto" required>
+                    <option value="">-- Выберите --</option>
+                    <option value="1">Да</option>
+                    <option value="0">Нет</option>
+                </select>
+            </div>
+            
+            <button type="submit">📊 Оценить карточку</button>
+        </form>
+        
+        <div class="result" id="result">
+            <h2>Результаты:</h2>
+            <div class="rating-box" id="ratingBox"></div>
+            <div id="details"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            evaluate();
+        });
+
+        function evaluate() {
+            let score = 0;
+            
+            // Название (макс 10)
+            const name = document.getElementById('name').value;
+            score += name.length > 50 ? 8 : 4;
+            
+            // Фото (макс 10)
+            const photos = parseInt(document.getElementById('photos').value) || 0;
+            score += photos >= 7 ? 10 : photos >= 5 ? 6 : 2;
+            
+            // Инфографика (макс 5)
+            score += parseInt(document.getElementById('infographics').value || 0) * 5;
+            
+            // Видео (макс 5)
+            score += parseInt(document.getElementById('video').value || 0) * 5;
+            
+            // Описание (макс 10)
+            const desc = document.getElementById('description').value;
+            score += desc.length > 300 ? 10 : desc.length > 100 ? 5 : 2;
+            
+            // Характеристики (макс 10)
+            score += parseInt(document.getElementById('characteristics').value || 0);
+            
+            // Отзывы (макс 10)
+            const reviews = parseInt(document.getElementById('reviews').value) || 0;
+            score += reviews >= 10 ? 8 : reviews >= 5 ? 5 : 2;
+            
+            // Рейтинг (макс 10)
+            const rating = parseFloat(document.getElementById('rating').value) || 0;
+            score += rating >= 4.3 ? 10 : rating >= 4 ? 7 : 3;
+            
+            // Отзывы с фото (макс 5)
+            score += parseInt(document.getElementById('reviewsPhoto').value || 0) * 5;
+            
+            // Норм по 100
+            const normalized = Math.min(100, (score / 75) * 100);
+            
+            let grade = 'A';
+            if (normalized < 75) grade = 'B';
+            if (normalized < 60) grade = 'C';
+            if (normalized < 40) grade = 'D';
+            
+            document.getElementById('ratingBox').textContent = grade + ' (' + normalized.toFixed(0) + '/100)';
+            
+            let html = '<h3>Рекомендации:</h3>';
+            if (photos < 7) html += '<div class="category-item">❌ Фото: добавьте минимум 7 фото</div>';
+            if (name.length < 50) html += '<div class="category-item">❌ Название: добавьте ключевые слова</div>';
+            if (desc.length < 300) html += '<div class="category-item">❌ Описание: расширьте до 300+ символов</div>';
+            if (rating < 4.3) html += '<div class="category-item">⚠️ Рейтинг: нужен минимум 4.3</div>';
+            if (reviews < 10) html += '<div class="category-item">⚠️ Отзывы: соберите минимум 10 отзывов</div>';
+            
+            if (photos >= 7 && name.length >= 50 && desc.length >= 300 && rating >= 4.3 && reviews >= 10) {
+                html += '<div class="category-item">✅ Карточка хорошо оформлена!</div>';
+            }
+            
+            document.getElementById('details').innerHTML = html;
+            document.getElementById('result').classList.add('show');
+        }
+    </script>
+</body>
+</html>
