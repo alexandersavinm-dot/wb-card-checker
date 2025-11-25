@@ -1,12 +1,151 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8"/>
-  <title>Оценка карточки Wildberries</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оценка карточки Wildberries</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        .result {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .rating {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: #667eea;
+        }
+        
+        .category {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .category-title {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .category-score {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .status-ok {
+            color: green;
+        }
+        
+        .status-warning {
+            color: orange;
+        }
+        
+        .status-critical {
+            color: red;
+        }
+    </style>
 </head>
 <body>
-  <h1>[translate:Оценка карточки товара Wildberries]</h1>
-  <p>[translate:Здесь будет ваша форма и кнопка для оценки]</p>
-  <!-- Пока заглушка -->
-</body>
-</html>
+    <div class="container">
+        <h1>🔍 Оценка карточки Wildberries</h1>
+        <p class="subtitle">Введите данные вашей карточки, и система выставит оценку</p>
+        
+        <form id="cardForm">
+            <div class="form-group">
+                <label for="productUrl">Ссылка на товар (WB):</label>
+                <input type="text" id="productUrl" placeholder="https://www.wildberries.ru/catalog/..." required>
+            </div>
+            
+            <div class="form-group">
+                <label for="productName">Название товара:</label>
+                <input type="text" id="productName" placeholder="Например: АураШарма Кресло-пуф-кровать 200x67" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="photoCount">Количество фото:</label>
+                <input type="number" id="photoCount" min="0" placeholder="7" required>
+            </div>
